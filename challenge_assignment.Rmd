@@ -1,0 +1,225 @@
+---
+title: "Plague Outbreak in India"
+subtitle: "Situation Report 1"
+date: "`r lubridate::today()`"
+author: "Emanuel & Faikah"
+output: 
+ prettydoc::html_pretty:
+   theme: cayman
+   highlight: github
+   number_sections: yes
+bibliography: references.bib
+link-citations: yes
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(linelist)
+library(kableExtra)
+library(lubridate)
+library(ggthemes)
+library(incidence)
+
+population_size <- 152
+```
+
+```{r read_data, echo=FALSE, message=FALSE, warning=FALSE}
+
+plague_clean <- read_csv("plague_1_update.csv") %>% 
+  clean_data() %>% 
+  arrange(onsetdate)
+
+plague_hhSize <- read_csv("plague_1_hhSize.csv") %>% 
+  select(hhID, size)
+
+plague <- left_join(plague_clean, plague_hhSize, by = c("householdid" = "hhID")) %>% 
+  mutate(agegroups = cut(age, 
+                         breaks = c(0,10,20,30,40,Inf),
+                         right = FALSE,
+                         labels = c("<10", "[10,20)","[20,30)","[30,40)","40+")))
+
+total_cases <-plague %>%
+  tally() %>%
+  as.numeric()
+
+confirmed <- plague %>% 
+  filter(status == "confirmed") %>% 
+  tally() %>% 
+  as.numeric()
+
+first_case <- plague %>%
+    filter(onsetdate == min(plague$onsetdate)) %>%
+  select(caseid)
+
+```
+
+```{r case_fatality_ratio, echo=FALSE}
+
+total_deaths <- plague %>%
+  drop_na(deathdate) %>% 
+  nrow()
+
+CFR <- round(total_deaths/population_size * 100,2)
+
+```
+
+
+```{r echo=FALSE}
+# time difference between onset and report date
+timedifference <- plague %>% 
+  mutate(timediff = difftime(reportdate, onsetdate, units = "days")) %>% 
+  summarise(mean =  mean(timediff)) %>% 
+  as.numeric() %>% 
+  round(digits = 2)
+
+```
+
+
+```{r, echo=FALSE}
+
+earliest_onset_date <- format(min(plague$onsetdate),"%d %B %Y")
+latest_onset_date <- format(max(plague$onsetdate),"%d %B %Y")
+
+earliest_report_date <- format(min(plague$reportdate),"%d %B %Y")
+latest_report_date <- format(max(plague$reportdate),"%d %B %Y")
+
+```
+# Highlights
+
+- **`r total_cases`** suspected cases have been reported from `r earliest_report_date` to `r latest_report_date`, with `r total_deaths` deaths
+- **`r confirmed`** of **`r total_cases`** suspected cases have been confirmed.
+- The case fatality rate was **`r CFR`%**
+- Household 10 had the most number of confirmed cases (8 cases).
+- There have been no new confirmed cases beyond `r latest_report_date`.
+
+# Context
+
+Northeast India is the easternmost region of India and comprises of eight states. It's a mountaineous region covered by dense forests. It shares border with many countries and is affected by some form of conflict @hassan2008breakdown.
+
+# Surveillance
+
+The first case (case id: `r first_case`) had an onset of illness  on `r  earliest_onset_date`. The case was reported `r  difftime(min(plague$reportdate),min(plague$onsetdate))` days later and diagnosed with pneumonic plague. Unfortunately, the patient had died on the same day. 
+
+Cases continued to be reported until `r latest_report_date`. The mean duration between reported date of onset of symptoms and reported date that of notification was `r timedifference` days. 
+A total of `r total_deaths` deaths has since been reported. The majority of these cases were porbable cases. The resulting case-fatality ratio is `r CFR`%.
+
+```{r, echo=FALSE, eval=FALSE}
+kable(plague, caption = "Line list of plague outbreak data in India, as of 25 January 2020") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+
+A total of `r total_cases` cases  were reported as suspected cases. These were reported  from `r earliest_report_date` to `r latest_report_date`. The outbreak is large for a small area with a population size of `r population_size`. The peak occurance of cases was noted on 8 December 2019 with five cases. No new cases reported after `r latest_report_date`. There seems to be one late case on from `r earliest_onset_date` and reported on `r latest_report_date` which might be due to long incubation period.
+
+```{r, echo=FALSE, message=FALSE, fig.cap= "Epidemic curve of pneumonic plague cases (n=88) in northeast India between October 2019 and January 2020, by date of onset of symptoms and status"}
+
+ggplot(data = plague, aes(x = onsetdate, fill = status))+
+  geom_bar()+
+  scale_x_date(date_breaks = "6 day", date_labels = "%b-%d")+
+  labs(x = "Date of symptom onset",
+       y = "Number of Cases") +
+  theme_bw()+
+  theme(plot.caption = element_text(size = 10,
+                                    hjust = 0),
+        axis.text.x = element_text(angle = 90))
+
+```
+
+The distribution of suspected cases among males (40) and females (48) was similar. Most notably, There were no cases for the 10-20 year age group. Most cases were reported for the 20-30 year age group with 20 and 30 cases reported by females and males, respectively. Two cases did not have information on the age of the cases.
+
+```{r, echo=FALSE, warning=FALSE}
+plague_summary_by_sex <-  plague %>% group_by(sex) %>% summarise(total.by.sex = n())
+plague_summary <- plague %>% group_by(sex, agegroups) %>% summarise(cases = n()) %>%
+  inner_join(plague_summary_by_sex, by = "sex")
+```
+
+```{r, echo=FALSE, warning=FALSE}
+kable(plague_summary, col.names = c("Sex", "Age group","Number of cases", "Total"),align = "c", caption = "Summary of cases by sex and age group")%>%
+  kable_styling(bootstrap_options = "striped", full_width = T) %>%
+  column_spec(1, bold = T)%>%
+  collapse_rows(columns = c(1,4), valign = "middle")
+
+```
+
+<br>
+
+
+The number of reported cases from household varied by the household sizes. 
+
+```{r, echo=FALSE, message=FALSE, fig.cap= "Occurance of pneumonic plague cases per household by status"}
+
+plague %>% 
+  group_by(householdid) %>% 
+  count(status) %>% 
+  ggplot(aes(x = factor(householdid), y = n, fill = status))+
+  geom_col()+
+  theme_bw()+
+  labs(x = "Household ID",
+       y = "Cases")+
+  theme(plot.caption = element_text(size = 10,
+                                    hjust = 0))
+```
+
+Most of those affected were from Household 10 had the highest overall number of cases (eight confirmed cases).
+
+
+# Transmissibility
+
+```{r modelling, echo=FALSE}
+# if you use the function fit_optim_split(plague_incidence), it splits the incidence automatically for you. I did daily analysis
+plague_incidence <- incidence(plague$onsetdate, interval = 1) 
+model_fit <- fit_optim_split(plague_incidence)
+# model_fit$split
+# model_fit$fit
+# plot(plague_incidence, border = "white") %>% 
+#   add_incidence_fit(model_fit$fit)
+
+growth_rate <- round(model_fit$fit$before$info$r,4)
+LCI_r <- round(model_fit$fit$before$info$r.conf[1],4)
+UCI_r <- round(model_fit$fit$before$info$r.conf[2],4)
+  
+doubling_time <- round(model_fit$fit$before$info$doubling,4)
+LCI_dt <- round(model_fit$fit$before$info$doubling.conf[1],4)
+UCI_dt <- round(model_fit$fit$before$info$doubling.conf[2],4)
+  
+# stratified by sex
+# plague_incidence_sex <- incidence(plague$onsetdate, interval = 1, groups = plague$sex)
+# model_fit_sex <- fit_optim_split(plague_incidence_sex)
+# model_fit_sex$split
+# model_fit_sex$fit
+# plot(plague_incidence_sex, border = "white") %>% 
+#   add_incidence_fit(model_fit_sex$fit)
+
+```
+
+We modelled the transmissibility of plague in northeast Inda by fitting a log-linear regression model to the data. This analysis was conducted using the r incidence package @kamvar2019epidemic. We found that the outbreak was growing very slowly (growth rate r was `r growth_rate` , 95% CI: [`r LCI_r`, `r UCI_r`]) and it took about two months (doubling time was `r doubling_time`, 95% CI: [`r LCI_dt`, `r UCI_dt`] days) for the incidence to double.
+
+
+```{r, echo = FALSE, eval=FALSE}
+
+inc.onset <- plague$onsetdate
+# Daily incidence
+inc.daily <- incidence(inc.onset)
+plot(inc.daily) # this is just the normal epi curve we might not need to change what we had earlier
+
+plague_incidence_weekly <- incidence(inc.onset, interval = "1 week") # daily seems quite resonable interval based on the paper she gave us
+plot(plague_incidence_weekly)
+
+# I think its nice to only do early if we strongly believe that the epidemic has not reached its peak then we can only interpret the growth rate and not the decreasing rate
+
+early.fit <- fit(plague_incidence_weekly[1:10]) # Im not sure whether this is correct. You need to filter cases before the peak
+early.fit
+plot(early.fit)
+
+plot(plague_incidence_weekly[1:10], fit = early.fit)
+plague_incidence.weekly.sex <- incidence(inc.onset, interval = "1 week", groups = plague$sex)# weekly, starting on Monday (ISO week, default)
+plot(plague_incidence.weekly.sex, stack = TRUE, border = "grey")
+
+
+###########
+
+```
+
+# References
