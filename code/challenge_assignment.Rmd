@@ -27,11 +27,11 @@ population_size <- 152
 
 ```{r read_data, echo=FALSE, message=FALSE, warning=FALSE}
 
-plague_clean <- read_csv("plague_1_update.csv") %>% 
+plague_clean <- read_csv("data/plague_1_update.csv") %>% 
   clean_data() %>% 
   arrange(onsetdate)
 
-plague_hhSize <- read_csv("plague_1_hhSize.csv") %>% 
+plague_hhSize <- read_csv("data/plague_1_hhSize.csv") %>% 
   select(hhID, size)
 
 plague <- left_join(plague_clean, plague_hhSize, by = c("householdid" = "hhID")) %>% 
