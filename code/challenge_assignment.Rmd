@@ -96,16 +96,16 @@ latest_report_date <- format(max(plague$reportdate),"%d %B %Y")
 
 # Context
 
-Northeast India is the easternmost region of India and comprises of eight states. It's a mountaineous region covered by dense forests. It shares border with many countries and is affected by some form of conflict [@hassan2008breakdown].
+Northeast India is the easternmost region of India and comprises of eight states. It's a mountainous region covered by dense forests. It shares border with many countries and is affected by some form of conflict [@hassan2008breakdown].
 
 # Surveillance
 
-The first case (case id: `r first_case`) had an onset of illness  on `r  earliest_onset_date`. The case was reported `r  difftime(min(plague$reportdate),min(plague$onsetdate))` days later and diagnosed with pneumonic plague. Unfortunately, the patient had died on the same day. 
+The first case (case id: `r first_case`) had an onset of illness  on `r  earliest_onset_date`. The case was reported `r  difftime(min(plague$reportdate),min(plague$onsetdate))` days later and diagnosed with pneumonic plague. Unfortunately, the patient died on the same day. 
 
-Cases continued to be reported until `r latest_report_date`. The mean duration between reported date of onset of symptoms and reported date that of notification was `r timedifference` days. 
+Cases continued to be reported until `r latest_report_date`. The mean duration between reported date of onset of symptoms and reported date that of notification was `r timedifference` days. This reporting delay is likely to distort the epidemic curve and the epidemic parameters.
 A total of `r total_deaths` deaths has since been reported. The majority of these cases were porbable cases. The resulting case-fatality ratio is `r CFR`%.
 
-A total of `r total_cases` cases  were reported as suspected cases. These were reported  from `r earliest_report_date` to `r latest_report_date`. The outbreak is large for a small area with a population size of `r population_size`. The peak occurance of cases was noted on 8 December 2019 with five cases. No new cases reported after `r latest_report_date`. There seems to be one late case on from `r earliest_onset_date` and reported on `r latest_report_date` which might be due to long incubation period.
+A total of `r total_cases` cases  were reported as suspected cases. These were reported  from `r earliest_report_date` to `r latest_report_date`. The peak occurance of cases was noted on 8 December 2019 with five cases. No new cases have been reported after `r latest_report_date`. There seems to be one late case that was reported on `r latest_report_date`. This might be due several factors: (1) the child had a long incubation period hence an outlier; (2) if the case was not an outlier, then there could be other cases between 3 January 2020 and 15 January 2020 that were not indentified. The could result in a second wave of the outbreak.
 
 ```{r, echo=FALSE, message=FALSE, fig.cap= "Figure 1: Epidemic curve of pneumonic plague cases (n=88) in northeast India between October 2019 and January 2020, by date of onset of symptoms and status"}
 
@@ -141,7 +141,7 @@ kable(plague_summary, col.names = c("Sex", "Age group","Number of cases", "Total
 <br>
 
 
-The number of reported cases from household varied by the household sizes. 
+The number of reported cases from household varied by the household sizes. Household 10 had the highest overall number of cases (eight confirmed cases).
 
 ```{r, echo=FALSE, message=FALSE, fig.cap= "Figure 2: Occurance of pneumonic plague cases per household by status"}
 
@@ -156,8 +156,6 @@ plague %>%
   theme(plot.caption = element_text(size = 10,
                                     hjust = 0))
 ```
-
-Most of those affected were from Household 10 had the highest overall number of cases (eight confirmed cases).
 
 
 # Transmissibility
@@ -189,10 +187,6 @@ UCI_dt <- round(model_fit$fit$before$info$doubling.conf[2],4)
 
 ```
 
-We modelled the transmissibility of plague in northeast Inda by fitting a log-linear regression model to the data. This analysis was conducted using the  `incidence` package [@kamvar2019epidemic]. We found that the outbreak was growing very slowly (growth rate r was `r growth_rate` , 95% CI: [`r LCI_r`, `r UCI_r`]) and it took about two months (doubling time was `r doubling_time`, 95% CI: [`r LCI_dt`, `r UCI_dt`] days) for the incidence to double.
-
+We modelled the transmissibility of plague in northeast Inda by fitting a log-linear regression model to the data. This analysis was conducted using the `incidence` package [@kamvar2019epidemic]. We found that the outbreak was growing very slowly (growth rate r was `r growth_rate` , 95% CI: [`r LCI_r`, `r UCI_r`]) and it took about two months (doubling time was `r doubling_time`, 95% CI: [`r LCI_dt`, `r UCI_dt`] days) for the incidence to double.
 
 # References
-
-<br>
-<br>
