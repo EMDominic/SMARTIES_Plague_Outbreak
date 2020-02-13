@@ -113,7 +113,7 @@ kable(plague, caption = "Line list of plague outbreak data in India, as of 25 Ja
 
 A total of `r total_cases` cases  were reported as suspected cases. These were reported  from `r earliest_report_date` to `r latest_report_date`. The outbreak is large for a small area with a population size of `r population_size`. The peak occurance of cases was noted on 8 December 2019 with five cases. No new cases reported after `r latest_report_date`. There seems to be one late case on from `r earliest_onset_date` and reported on `r latest_report_date` which might be due to long incubation period.
 
-```{r, echo=FALSE, message=FALSE, fig.cap= "Epidemic curve of pneumonic plague cases (n=88) in northeast India between October 2019 and January 2020, by date of onset of symptoms and status"}
+```{r, echo=FALSE, message=FALSE, fig.cap= "Figure 1: Epidemic curve of pneumonic plague cases (n=88) in northeast India between October 2019 and January 2020, by date of onset of symptoms and status"}
 
 ggplot(data = plague, aes(x = onsetdate, fill = status))+
   geom_bar()+
@@ -136,7 +136,7 @@ plague_summary <- plague %>% group_by(sex, agegroups) %>% summarise(cases = n())
 ```
 
 ```{r, echo=FALSE, warning=FALSE}
-kable(plague_summary, col.names = c("Sex", "Age group","Number of cases", "Total"),align = "c", caption = "Summary of cases by sex and age group")%>%
+kable(plague_summary, col.names = c("Sex", "Age group","Number of cases", "Total"),align = "c", caption = "Table 1: Summary of cases by sex and age group")%>%
   kable_styling(bootstrap_options = "striped", full_width = T) %>%
   column_spec(1, bold = T)%>%
   collapse_rows(columns = c(1,4), valign = "middle")
@@ -148,7 +148,7 @@ kable(plague_summary, col.names = c("Sex", "Age group","Number of cases", "Total
 
 The number of reported cases from household varied by the household sizes. 
 
-```{r, echo=FALSE, message=FALSE, fig.cap= "Occurance of pneumonic plague cases per household by status"}
+```{r, echo=FALSE, message=FALSE, fig.cap= "Figure 2: Occurance of pneumonic plague cases per household by status"}
 
 plague %>% 
   group_by(householdid) %>% 
